@@ -4,11 +4,16 @@ const app = express();
 const port = 8000;
 app.listen(port, () => console.log(`App is now listening on port: ${port}`));
 app.use(express.json());
-const users = [
+let users = [
   {
     id: 1,
     name: 'Isaac',
-    password: '123456',
+    bio: 'Hello',
+  },
+  {
+    id: 2,
+    name: 'John',
+    bio: 'My name is john',
   },
 ];
 
@@ -18,23 +23,51 @@ app.post('/api/users', (req, res) => {
   // Create a new user:
   const newUser = req.body;
 
-  // Pushes new user to users array
-  users.push(newUser);
-
-  // Returns Created User with created status code
-  res.status(201).json(newUser);
+  if (newUser.name && newUser.bio) {
+    // Pushes new user to users array
+    users.push(newUser);
+    // Returns Created User with created status code
+    res.status(201).json(newUser);
+  } else {
+    res
+      .status(400)
+      .send({ errorMessage: 'Please provide a name and bio for user' });
+  }
 });
 
 app.get('/api/users', (req, res) => {
   // Returns all users:
-  res.json(users);
+  !users
+    ? res
+        .status(500)
+        .send({ errorMessage: 'The users information could not be retrieved' })
+    : res.json(users);
 });
 app.get('/api/users/:id', (req, res) => {
   // Returns specified user with ID:
   const id = req.params.id;
   const user = users.find((i) => i.id == id);
+  console.log(user);
   !user
     ? res.status(404).json({ message: 'User does not exist' })
     : Object.assign(user, req.body);
-  res.status(200).json(user);
+
+  !users
+    ? res
+        .status(500)
+        .send({ errorMessage: "The user's information could not be retrieved" })
+    : res.status(200).json(user);
+});
+
+app.delete('/api/users/:id', (req, res) => {
+  const { id } = req.params;
+  console.log(id);
+  const user = users.find((i) => i.id == id);
+  console.log(user);
+  !user
+    ? res.status(404).send({ errorMessage: 'User Does Not Exist' })
+    : (users = users.filter((user) => {
+        user.id !== id;
+      }));
+  res.status(200).json(users);
 });
