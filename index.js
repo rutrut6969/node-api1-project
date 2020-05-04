@@ -1,36 +1,40 @@
+// Expressions to initiate Server:
 const express = require('express');
-const server = express();
-
-let lessons = [
+const app = express();
+const port = 8000;
+app.listen(port, () => console.log(`App is now listening on port: ${port}`));
+app.use(express.json());
+const users = [
   {
     id: 1,
-    name: 'Introduction to HTTP APIs with Node and Express',
-  },
-  {
-    id: 2,
-    name: "Let's git it!",
+    name: 'Isaac',
+    password: '123456',
   },
 ];
 
-server.get('/', (req, res) => {
-  res.json({ api: 'Up and Running' });
+// Request Handlers:
+
+app.post('/api/users', (req, res) => {
+  // Create a new user:
+  const newUser = req.body;
+
+  // Pushes new user to users array
+  users.push(newUser);
+
+  // Returns Created User with created status code
+  res.status(201).json(newUser);
 });
 
-const port = 8000;
-
-server.listen(port, () => console.log(`Running on port ${port}`));
-server.use(express.json());
-
-server.get('/api/lessons', (req, res) => {
-  // Return an array of lessons (id, name)
-
-  res.json(lessons);
+app.get('/api/users', (req, res) => {
+  // Returns all users:
+  res.json(users);
 });
-
-server.post('/api/lessons', (req, res) => {
-  const lessonInformation = req.body;
-
-  lessons.push(lessonInformation);
-
-  res.status(201).json(lessonInformation);
+app.get('/api/users/:id', (req, res) => {
+  // Returns specified user with ID:
+  const id = req.params.id;
+  const user = users.find((i) => i.id == id);
+  !user
+    ? res.status(404).json({ message: 'User does not exist' })
+    : Object.assign(user, req.body);
+  res.status(200).json(user);
 });
