@@ -41,7 +41,11 @@ app.get('/api/users', (req, res) => {
     ? res
         .status(500)
         .send({ errorMessage: 'The users information could not be retrieved' })
-    : res.json(users);
+    : users.map((user, i) => {
+        if (user === null) {
+          users.splice(i, 1);
+        }
+      }) && res.status(200).json(users);
 });
 app.get('/api/users/:id', (req, res) => {
   // Returns specified user with ID:
@@ -66,8 +70,35 @@ app.delete('/api/users/:id', (req, res) => {
   console.log(user);
   !user
     ? res.status(404).send({ errorMessage: 'User Does Not Exist' })
-    : (users = users.filter((user) => {
-        user.id !== id;
-      }));
+    : delete users[id - 1];
   res.status(200).json(users);
+});
+
+app.put('/api/users/:id', (req, res) => {
+  const { id } = req.params;
+  const user = users.find((i) => i.id == id);
+  const newInfo = req.body;
+  const index = id - 1;
+  let newUserArr = [...users];
+  if (!user) {
+    res.status(404).send({ message: 'USER DOES NOT EXIST' });
+  } else if (!user.bio && !user.name) {
+    res
+      .status(400)
+      .send({ message: 'Please provide a name and bio for the user' });
+  } else {
+    if (!newInfo.bio) {
+      newUserArr[index] = { ...user, name: newInfo.name };
+      users = newUserArr;
+      res.status(200).json(users);
+    } else if (!newInfo.name) {
+      newUserArr[index] = { ...user, bio: newInfo.bio };
+      users = newUserArr;
+      res.status(200).json(users);
+    } else {
+      newUserArr[index] = { ...user, name: newInfo.name, bio: newInfo.bio };
+      users = newUserArr;
+      res.status(200).json(users);
+    }
+  }
 });
